@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech-to-WPM Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .form-container {
+            margin-top: 50px;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        #cadence-plot {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Speech to Words Per Minute Tracker</h1>
+
+    <div class="form-container">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="audio" accept="audio/*" required>
+            <br><br>
+            <input type="submit" value="Upload and Analyze">
+        </form>
+    </div>
+
+    <div class="result" id="result"></div>
+    <img id="cadence-plot" style="display:none;" />
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(this);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = `
+                    <p><strong>Transcription:</strong> ${data.transcription}</p>
+                    <p><strong>Syllable Count:</strong> ${data.syllable_count}</p>
+                    <p><strong>Estimated WPM:</strong> ${data.wpm}</p>
+                `;
+                document.getElementById('cadence-plot').src = `/plot/${data.plot}`;
+                document.getElementById('cadence-plot').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
