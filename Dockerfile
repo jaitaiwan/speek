@@ -20,7 +20,9 @@ RUN apt-get update && apt-get install -y \
 RUN pip install flask \
     git+https://github.com/openai/whisper.git \
     syllapy \
-    torch
+    torch \
+    matplotlib \
+    numpy
 
 # Copy all application files to the working directory
 COPY . /app
