@@ -26,7 +26,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/speek-app:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/speek:latest
         # For tagging with the Git commit SHA, add this:
         # tags: ${{ secrets.DOCKER_USERNAME }}/speek-app:latest,${{ secrets.DOCKER_USERNAME }}/speek-app:${{ github.sha }}
 
