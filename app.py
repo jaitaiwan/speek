@@ -5,6 +5,8 @@ import time
 from syllapy import count as count_syllables
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+import string
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -12,10 +14,15 @@ app = Flask(__name__)
 # Create the folder to store uploaded audio files
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs('static', exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Load Whisper model
 model = whisper.load_model("base")
+
+def random_string(length=9):
+    charset = string.ascii_lowercase + string.digits
+    return ''.join(random.choice(charset) for _ in range(length))
 
 # Function to calculate WPM
 def calculate_wpm(syllable_count, elapsed_seconds, syllables_per_word=1.5):
@@ -37,14 +44,22 @@ def generate_cadence_plot(syllable_times):
     plt.ylabel('Syllables')
     plt.title('Syllable Cadence over Time')
     plt.legend()
-    plot_path = os.path.join(UPLOAD_FOLDER, 'cadence_plot.png')
-    plt.savefig(plot_path)
+    plot_path = random_string() + '-cadence_plot.png'
+    plt.savefig(os.path.join('static', plot_path))
     plt.close()
     return plot_path
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/wpm')
+def wpm():
+    return render_template('wpm.html')
+
+@app.route('/syllable')
+def sy():
+    return render_template('syllable.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -70,6 +85,9 @@ def upload_file():
     # Generate mock syllable times for cadence plot (as Whisper doesn't return timestamps per syllable)
     syllable_times = np.linspace(0, elapsed_time, syllable_count)
     plot_path = generate_cadence_plot(syllable_times)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
     # Return JSON data (text transcription, WPM, plot path)
     return jsonify({

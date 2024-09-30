@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllables to Words Per Minute Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .button-container {
+            margin: 20px;
+        }
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+        }
+        #wpm {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Syllables to Words Per Minute Tracker</h1>
+
+    <div class="button-container">
+        <button id="syllableButton">Syllable</button>
+        <button id="stopButton">Stop</button>
+    </div>
+
+    <p id="wpm">Words Per Minute: 0</p>
+    
+    <canvas id="cadenceChart" width="400" height="200"></canvas>
+
+    <script>
+        let syllableCount = 0;
+        const syllablesPerWord = 1.5; // Average syllables per word
+        let startTime = null;
+        let intervalTimes = [];
+        let cadenceData = [];
+        let timer = null;
+
+        const wpmDisplay = document.getElementById('wpm');
+        const syllableButton = document.getElementById('syllableButton');
+        const stopButton = document.getElementById('stopButton');
+        const ctx = document.getElementById('cadenceChart').getContext('2d');
+
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Syllables Cadence (ms per syllable)',
+                    data: cadenceData,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false,
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Syllables'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Milliseconds per Syllable'
+                        }
+                    }
+                }
+            }
+        });
+
+        function calculateWPM() {
+            const currentTime = new Date();
+            const elapsedTime = (currentTime - startTime) / 60000; // Time in minutes
+            const wordEstimate = syllableCount / syllablesPerWord; // Estimate words from syllables
+            const wpm = Math.floor(wordEstimate / elapsedTime);
+            wpmDisplay.textContent = `Words Per Minute: ${wpm}`;
+        }
+
+        function recordCadence() {
+            const currentTime = new Date();
+            if (startTime === null) {
+                startTime = currentTime;
+                intervalTimes.push(currentTime);
+                return;
+            }
+
+            intervalTimes.push(currentTime);
+            const interval = intervalTimes[intervalTimes.length - 1] - intervalTimes[intervalTimes.length - 2];
+            cadenceData.push(interval);
+
+            chart.data.labels.push(syllableCount);
+            chart.update();
+        }
+
+        function resetTracker() {
+            syllableCount = 0;
+            startTime = null;
+            intervalTimes = [];
+            cadenceData = [];
+            chart.data.labels = [];
+            chart.data.datasets[0].data = [];
+            chart.update();
+            wpmDisplay.textContent = `Words Per Minute: 0`;
+            clearInterval(timer);
+        }
+
+        syllableButton.addEventListener('click', () => {
+            syllableCount++;
+            recordCadence();
+            calculateWPM();
+        });
+
+        stopButton.addEventListener('click', () => {
+            clearInterval(timer);
+            syllableButton.disabled = true;
+        });
+
+        window.addEventListener('beforeunload', resetTracker);
+    </script>
+</body>
+</html>
+
