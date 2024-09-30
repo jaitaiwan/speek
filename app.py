@@ -25,24 +25,17 @@ def random_string(length=9):
     return ''.join(random.choice(charset) for _ in range(length))
 
 # Function to calculate WPM
-def calculate_wpm(syllable_count, elapsed_seconds, syllables_per_word=1.5):
+def calculate_wpm(word_count, elapsed_seconds):
     minutes = elapsed_seconds / 60
-    estimated_words = syllable_count / syllables_per_word
-    wpm = estimated_words / minutes
+    wpm = word_count / minutes if minutes > 0 else 0
     return wpm
 
-# Function to count syllables in a sentence
-def get_syllable_count(text):
-    words = text.split()
-    syllable_count = sum(count_syllables(word) for word in words)
-    return syllable_count
-
 # Function to generate and save cadence plot
-def generate_cadence_plot(syllable_times):
-    plt.plot(syllable_times, np.arange(len(syllable_times)), label="Syllable Cadence")
-    plt.xlabel('Time (seconds)')
-    plt.ylabel('Syllables')
-    plt.title('Syllable Cadence over Time')
+def generate_cadence_plot(word_intervals):
+    plt.plot(np.arange(len(word_intervals)), word_intervals, label="Word Cadence (s)")
+    plt.xlabel('Word Index')
+    plt.ylabel('Time Between Words (s)')
+    plt.title('Word Cadence over Time')
     plt.legend()
     plot_path = random_string() + '-cadence_plot.png'
     plt.savefig(os.path.join('static', plot_path))
@@ -75,16 +68,25 @@ def upload_file():
 
     # Transcribe and analyze the audio file
     start_time = time.time()
-    result = model.transcribe(file_path)
+    result = model.transcribe(file_path, word_timestamps=True)
     elapsed_time = time.time() - start_time
 
-    # Calculate syllable count
-    syllable_count = get_syllable_count(result['text'])
-    wpm = calculate_wpm(syllable_count, elapsed_time)
+    # Extract word-level timestamps
+    words = []
+    word_intervals = []
+    prev_end_time = None
 
-    # Generate mock syllable times for cadence plot (as Whisper doesn't return timestamps per syllable)
-    syllable_times = np.linspace(0, elapsed_time, syllable_count)
-    plot_path = generate_cadence_plot(syllable_times)
+    for segment in result['segments']:
+        for word_info in segment['words']:
+            words.append(word_info['word'])
+            if prev_end_time is not None:
+                word_intervals.append(word_info['start'] - prev_end_time)
+            prev_end_time = word_info['end']
+
+    word_count = len(words)
+    wpm = calculate_wpm(word_count, elapsed_time)
+
+    plot_path = generate_cadence_plot(word_intervals)
 
     if os.path.exists(file_path):
         os.remove(file_path)
@@ -92,7 +94,7 @@ def upload_file():
     # Return JSON data (text transcription, WPM, plot path)
     return jsonify({
         'transcription': result['text'],
-        'syllable_count': syllable_count,
+        'word_count': syllable_count,
         'wpm': wpm,
         'plot': plot_path
     })

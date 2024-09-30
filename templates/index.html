@@ -49,9 +49,8 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('result').innerHTML = `
+                    <p><strong>WPM:</strong> ${data.wpm}</p>
                     <p><strong>Transcription:</strong> ${data.transcription}</p>
-                    <p><strong>Syllable Count:</strong> ${data.syllable_count}</p>
-                    <p><strong>Estimated WPM:</strong> ${data.wpm}</p>
                 `;
                 document.getElementById('cadence-plot').src = `/plot/${data.plot}`;
                 document.getElementById('cadence-plot').style.display = 'block';
