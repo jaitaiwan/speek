@@ -94,7 +94,7 @@ def upload_file():
     # Return JSON data (text transcription, WPM, plot path)
     return jsonify({
         'transcription': result['text'],
-        'word_count': syllable_count,
+        'word_count': word_count,
         'wpm': wpm,
         'plot': plot_path
     })
