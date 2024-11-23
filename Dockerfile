@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     git \
     ffmpeg \
     libsndfile1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements.txt file (if you are using one) or manually install dependencies
